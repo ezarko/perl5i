@@ -326,6 +326,47 @@ than C<< $string->length >> it will just return C<$string>.
 
 Round to the nearest integer.
 
+    my $rounded_number = $number->round(mechanic=>'R-H-E');
+
+Round to the nearest integer using the Round-Half-Even tie breaking mechanic.
+
+Other available tie breaking mechanics are:
+
+    R-H-U-s     Round-Half-Up (symmetric)
+    R-H-U-a     Round-Half-Up (asymmetric)
+    R-H-D-s     Round-Half-Down (symmetric)
+    R-H-D-a     Round-Half-Down (asymmetric)
+    R-H-E       Round-Half-Even
+    R-H-O       Round-Half-Odd
+    R-C         Round-Ceil
+    R-F         Round-Floor
+    R-T-Z       Round-Toward-Zero
+    R-AF-Z      Round-Away From-Zero
+
+See also: L<http://www.diycalculator.com/popup-m-round.shtml>
+
+    my $rounded_number = $number->round(mechanic=>sub{
+        if (abs($_[0] - int($_[0])) == 0.5) {
+            rand()%2 ? round_up($_[0])
+                     : round_down($_[0]);
+        }
+        else {
+            round_half_up_symmetric($_[0]);
+        }
+    });
+
+Round to the nearest integer using a custom tie breaking mechanic.
+
+This example illustrates Stochastic Rounding.
+
+    my $rounded_number = $number->round(increment=>2);
+
+Round to the nearest multiple of two.
+
+    my $rounded_number = $number->round(increment=>0.01);
+
+Round to the nearest hundreths.
+
 =head3 round_up
 
 =head3 ceil
@@ -353,6 +394,60 @@ Rounds the $number towards negative infinity.
 
 floor() is a synonyn for round_down().
 
+
+=head3 round_half_up_symmetric
+
+    my $new_number = $number->round_half_up_symmetric;
+
+Rounds to the nearest integer, with halves rounding away from zero.
+
+=head3 round_half_up_asymmetric
+
+    my $new_number = $number->round_half_up_asymmetric;
+
+Rounds to the nearest integer, with halves rounding toward infinity.
+
+=head3 round_half_down_symmetric
+
+    my $new_number = $number->round_half_down_symmetric;
+
+Rounds to the nearest integer, with halves rounding toward zero.
+
+Also known as Arithmetic Rounding.
+
+=head3 round_half_down_asymmetric
+
+    my $new_number = $number->round_half_down_asymmetric;
+
+Rounds to the nearest integer, with halves rounding toward negative infinity.
+
+=head3 round_half_even
+
+    my $new_number = $number->round_half_even;
+
+Rounds to the nearest integer, with halves rounding toward the even number.
+
+Also known as Banker's Rounding.
+
+=head3 round_half_odd
+
+    my $new_number = $number->round_half_odd;
+
+Rounds to the nearest integer, with halves rounding toward the odd number.
+
+=head3 round_toward_zero
+
+    my $new_number = $number->round_toward_zero;
+
+Rounds the $number toward zero.
+
+Also known as Truncation.
+
+=head3 round_away_from_zero
+
+    my $new_number = $number->round_away_from_zero;
+
+Rounds the $number away from zero.
 
 =head3 is_number
 

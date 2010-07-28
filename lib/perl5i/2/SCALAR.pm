@@ -127,9 +127,7 @@ require POSIX;
 *floor = \&POSIX::floor;
 *round_up   = \&ceil;
 *round_down = \&floor;
-sub round {
-    return 0 if $_[0] == 0;
-
+sub round_half_up_symmetric {
     if( $_[0]->is_positive ) {
         abs($_[0] - int($_[0])) < 0.5 ? round_down($_[0])
                                       : round_up($_[0])
@@ -138,6 +136,110 @@ sub round {
         abs($_[0] - int($_[0])) < 0.5 ? round_up($_[0])
                                       : round_down($_[0])
     }
+}
+sub round_half_up_asymmetric {
+    if( $_[0]->is_positive ) {
+        abs($_[0] - int($_[0])) < 0.5 ? round_down($_[0])
+                                      : round_up($_[0])
+    }
+    else {
+        abs($_[0] - int($_[0])) <= 0.5 ? round_up($_[0])
+                                      : round_down($_[0])
+    }
+}
+sub round_half_down_symmetric {
+    if( $_[0]->is_positive ) {
+        abs($_[0] - int($_[0])) <= 0.5 ? round_down($_[0])
+                                       : round_up($_[0])
+    }
+    else {
+        abs($_[0] - int($_[0])) <= 0.5 ? round_up($_[0])
+                                       : round_down($_[0])
+    }
+}
+sub round_half_down_asymmetric {
+    if( $_[0]->is_positive ) {
+        abs($_[0] - int($_[0])) <= 0.5 ? round_down($_[0])
+                                       : round_up($_[0])
+    }
+    else {
+        abs($_[0] - int($_[0])) < 0.5 ? round_up($_[0])
+                                       : round_down($_[0])
+    }
+}
+sub round_half_even {
+    if (abs($_[0] - int($_[0])) == 0.5) {
+        $_[0] = round_half_up_symmetric($_[0]);
+        $_[0]->is_even     ? $_[0]     :
+        $_[0]->is_positive ? $_[0] - 1 : $_[0] + 1;
+    }
+    else {
+        round_half_up_symmetric($_[0]);
+    }
+}
+sub round_half_odd {
+    if (abs($_[0] - int($_[0])) == 0.5) {
+        $_[0] = round_half_up_symmetric($_[0]);
+        $_[0]->is_odd      ? $_[0]     :
+        $_[0]->is_positive ? $_[0] - 1 : $_[0] + 1;
+    }
+    else {
+        round_half_up_symmetric($_[0]);
+    }
+}
+sub round_toward_zero {
+    int($_[0]);
+}
+sub round_away_from_zero {
+    if( int($_[0]) == $_[0] ) {
+        $_[0];
+    }
+    elsif( $_[0]->is_positive ) {
+        round_up($_[0]);
+    }
+    else {
+        round_down($_[0]);
+    }
+}
+sub round {
+    return 0 if $_[0] == 0;
+
+    my $value = shift;
+
+    my($mechanic,$increment) = ('R-H-U-s', 1);
+    while(@_) {
+        my $k = shift;
+        if( $k eq 'mechanic' ) {
+            $mechanic = shift;
+        }
+        elsif( $k eq 'increment' ) {
+            $increment = shift;
+        }
+        else {
+            die "unknown argument: $k";
+        }
+    }
+
+    my %algo = (
+        'R-H-U-s' => \&round_half_up_symmetric,
+        'R-H-U-a' => \&round_half_up_asymmetric,
+        'R-H-D-s' => \&round_half_down_symmetric,
+        'R-H-D-a' => \&round_half_down_asymmetric,
+        'R-H-E'   => \&round_half_even,
+        'R-H-O'   => \&round_half_odd,
+        'R-C'     => \&ceil,
+        'R-F'     => \&floor,
+        'R-T-Z'   => \&round_toward_zero,
+        'R-AF-Z'  => \&round_away_from_zero,
+    );
+
+    if (ref($mechanic) eq '' && exists($algo{$mechanic})) {
+        $mechanic = $algo{$mechanic};
+    } elsif (ref($mechanic) ne 'CODE') {
+        die "unknown mechanic: $mechanic"
+    }
+
+    $mechanic->($value/$increment) * $increment;
 }
 
 require Scalar::Util;
